@@ -10,6 +10,7 @@ use App\Domain\Customer\UseCases\UpdateCustomer;
 use App\Helper\ApiResource;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Resources\CustomerResource;
+use Exception;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -39,9 +40,13 @@ class CustomerController extends Controller
      */
     public function show(int $id, CetCustomer $useCase)
     {
-        $customer = $useCase->execut($id);
-        if($customer)
-            return ApiResource::setSchema(new CustomerResource($customer), "Retreved Data Successfully!.",200);
+        try {
+            $customer = $useCase->execut($id);
+            if($customer)
+                return ApiResource::setSchema(new CustomerResource($customer), "Retreved Data Successfully!.",200);
+        } catch (Exception $e) {
+                return ApiResource::setSchema(new CustomerResource([]), "Retreved Data Faulid!.",200);
+        }
         return ApiResource::setSchema(new CustomerResource([]), "Retreved Data Faulid!.",200);
     }
 
