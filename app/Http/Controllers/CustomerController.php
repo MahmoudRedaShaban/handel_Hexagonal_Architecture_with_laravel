@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use ApiResource;
+
 use App\Domain\Customer\UseCases\CetCustomer;
 use App\Domain\Customer\UseCases\CreateCustomer;
 use App\Domain\Customer\UseCases\DeleteCustomer;
 use App\Domain\Customer\UseCases\UpdateCustomer;
+use App\Helper\ApiResource;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Resources\CustomerResource;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class CustomerController extends Controller
     public function store(CustomerRequest $request, CreateCustomer $useCase)
     {
         $useCase->execute($request->name, $request->email);
-        return ApiResource::setSchema(new CustomerResource([]), "Successfull Created Customer", 201);
+        return ApiResource::setSchema(new CustomerResource([]), "Successfully Created Customer", 201);
     }
 
     /**

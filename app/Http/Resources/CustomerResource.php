@@ -14,6 +14,10 @@ class CustomerResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        if (is_null($this->resource) || (is_array($this->resource) && empty($this->resource))) {
+            return [];
+        }
+
         return [
             "name" => $this->name,
             "email" => $this->email

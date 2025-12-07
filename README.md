@@ -1,59 +1,172 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Hexagonal Architecture with Laravel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This project demonstrates the implementation of Hexagonal Architecture (also known as Ports and Adapters) within a Laravel framework. The goal is to achieve a decoupled, testable, and maintainable application by separating core business logic (Domain) from external concerns (Infrastructure, UI).
 
-## About Laravel
+## Why Hexagonal Architecture?
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Hexagonal Architecture focuses on isolating the domain logic from external technologies like databases, web frameworks, and external APIs. This provides:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+-   **Decoupling**: The core business logic doesn't depend on specific infrastructure details.
+-   **Testability**: The domain can be tested independently of the UI and database.
+-   **Maintainability**: Changes in external technologies have minimal impact on the core.
+-   **Flexibility**: Easily swap out implementations (e.g., switch from Eloquent to another ORM or a different database).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Architecture Diagram (Conceptual)
 
-## Learning Laravel
+```
++-------------------------------------------------------------+
+|               User Interface / API (Controllers)            |
+|                                                             |
+|   +-----------------------------------------------------+   |
+|   |         Application Layer (Use Cases)             |   |
+|   |                                                     |   |
+|   |   +---------------------------------------------+   |   |
+|   |   |         Domain Layer (Entities, Repositories)   |   |
+|   |   |                                               |   |   |
+|   |   |      (Ports - Interfaces defined here)        |   |   |
+|   |   +---------------------------------------------+   |   |
+|   |                                                     |   |
+|   +-----------------------------------------------------+   |
+|                                                             |
+|   +-----------------------------------------------------+   |
+|   |        Infrastructure Layer (Adapters)            |   |
+|   |                                                     |   |
+|   |     (Adapters - Implementations of Domain Ports)    |   |
+|   |                                                     |   |
+|   +-----------------------------------------------------+   |
+|                                                             |
+|               External Services (Database, APIs)            |
++-------------------------------------------------------------+
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Explanation of Layers:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+-   **Domain Layer (`app/Domain`)**: Contains the core business logic, entities, and interfaces (ports) for interacting with external systems (e.g., `CustomerRepository`). This is the heart of the application and has no dependencies on the `Infrastructure` layer.
+-   **Application Layer (`app/Domain/UseCases`)**: Orchestrates the domain objects to perform specific application features. Each use case represents a distinct action (e.g., `CreateCustomer`, `GetCustomer`).
+-   **User Interface / API Layer (`app/Http/Controllers`)**: Handles incoming requests, translates them into calls to the application layer (use cases), and formats the output.
+-   **Infrastructure Layer (`app/Infrastructure`)**: Provides the concrete implementations (adapters) for the ports defined in the domain. This includes persistence (e.g., `EloquentCustomerRepository`), external services, and frameworks.
 
-## Laravel Sponsors
+## Folder Structure
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+The key directories reflecting the hexagonal architecture are found within the `app/` folder:
 
-### Premium Partners
+```
+app/
+├── Domain/
+│   ├── Customer/
+│   │   ├── Entities/             # Core business objects (e.g., Customer.php)
+│   │   ├── Repositories/         # Interfaces (ports) for data access (e.g., CustomerRepository.php)
+│   │   └── UseCases/             # Application-specific logic (e.g., CreateCustomer.php, CetCustomer.php)
+│   ├── Order/
+│   └── Producte/
+├── Helper/
+│   └── ApiResource.php           # Custom API response helper
+├── Http/
+│   ├── Controllers/              # Laravel controllers (adapters for the web)
+│   ├── Requests/                 # Form requests for validation
+│   └── Resources/                # API resources for data transformation
+├── Infrastructure/
+│   ├── Persistence/              # Adapters implementing domain repository interfaces (e.g., EloquentCustomerRepository.php)
+│   └── Providers/                # Service providers for dependency injection (e.g., RepositoryServiceProvider.php)
+├── Models/                       # Eloquent models (used by Infrastructure layer)
+│   ├── Customer.php
+│   └── User.php
+└── Providers/
+    └── AppServiceProvider.php
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Example Flow: Creating a Customer
 
-## Contributing
+1.  **Request**: An API request hits `CustomerController@store`.
+2.  **Controller (`app/Http/Controllers/CustomerController.php`)**:
+    -   Receives the `CustomerRequest` (validated input).
+    -   Invokes the `CreateCustomer` Use Case (`App\Domain\Customer\UseCases\CreateCustomer`).
+3.  **Use Case (`App\Domain\Customer\UseCases/CreateCustomer.php`)**:
+    -   Depends on `App\Domain\Customer\Repositories\CustomerRepository` (the port/interface).
+    -   Creates a `Customer` entity (`App\Domain\Customer\Entities\Customer.php`).
+    -   Calls `save()` on the `CustomerRepository` interface.
+4.  **Dependency Injection (`App\Infrastructure\Providers\RepositoryServiceProvider.php`)**:
+    -   Laravel's service container, configured via `RepositoryServiceProvider`, resolves `CustomerRepository` to `App\Infrastructure\Persistence\EloquentCustomerRepository` (the adapter).
+5.  **Adapter (`App\Infrastructure\Persistence\EloquentCustomerRepository.php`)**:
+    -   Implements the `CustomerRepository` interface.
+    -   Uses the Eloquent ORM (`App\Models\Customer.php`) to persist the customer data to the database.
+6.  **Response**: The controller receives the result from the use case and uses `ApiResource` to return a `201 Created` HTTP response.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Commands
 
-## Code of Conduct
+These are common commands for setting up and running the Laravel project:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+-   **Install PHP Dependencies**:
 
-## Security Vulnerabilities
+    ```bash
+    composer install
+    ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+-   **Copy Environment File**:
 
-## License
+    ```bash
+    cp .env.example .env
+    ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+-   **Generate Application Key**:
+
+    ```bash
+    php artisan key:generate
+    ```
+
+-   **Run Database Migrations**:
+
+    ```bash
+    php artisan migrate
+    ```
+
+-   **Start Local Development Server**:
+
+    ```bash
+    php artisan serve
+    ```
+
+-   **Clear Configuration Cache (if issues occur after changes)**:
+    ```bash
+    php artisan config:clear
+    php artisan cache:clear
+    php artisan view:clear
+    ```
+
+## How to Run Tests
+
+The project uses PHPUnit for testing.
+
+-   **Run All Tests**:
+
+    ```bash
+    php artisan test
+    ```
+
+-   **Run Tests in a Specific File**:
+
+    ```bash
+    php artisan test --filter=<path_to_test_file>
+    # Example: php artisan test --filter=tests/Unit/ExampleTest.php
+    ```
+
+-   **Run a Specific Test Method**:
+    ```bash
+    php artisan test --filter=<TestClassName>::<testMethodName>
+    # Example: php artisan test --filter=ExampleTest::test_that_true_is_true
+    ```
+
+## Development Notes (Derived from commits and architectural choices)
+
+-   **Initial Setup**: Project initialized with Laravel, focusing on a clean separation of concerns.
+-   **Domain-Driven Structure**: Emphasis on defining domain entities and repositories first.
+-   **Use Cases**: Introduction of dedicated use cases to encapsulate specific application logic.
+-   **Repository Pattern**: Implementation of the repository pattern to abstract data persistence.
+-   **Dependency Injection**: Extensive use of Laravel's service container for managing dependencies, especially for binding interfaces to concrete implementations.
+-   **API Design**: Use of `ApiResource` helper for consistent API responses.
+-   **Testing Strategy**: Facilitating unit testing of domain and use case layers independently.
+
+---
+
+**Author**: MahmoudRedaShaban
+**Branch**: `hexagonalArchTest/mahmoudreda`

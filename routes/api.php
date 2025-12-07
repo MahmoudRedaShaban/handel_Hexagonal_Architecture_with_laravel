@@ -11,4 +11,4 @@ Route::get('/user', function (Request $request) {
 
 
 
-Route::apiResource('/v1/Customer',CustomerController::class);
+Route::apiResource('/v1/customer',CustomerController::class);
