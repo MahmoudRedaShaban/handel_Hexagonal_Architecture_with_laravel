@@ -10,6 +10,7 @@ class RepositoryServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        // bind interface ->  implementation
         $this->app->bind(CustomerRepository::class, EloquentCustomerRepository::class);
     }
 }
