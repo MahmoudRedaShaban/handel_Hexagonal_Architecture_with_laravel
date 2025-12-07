@@ -14,6 +14,6 @@ class CreateCustomer
     public function execute(string $name, string $email)
     {
         $customer = new Customer($name,$email);
-        $this->repo->save();  // Handel in Adapter Using Port
+        $this->repo->save($customer);  // Handel in Adapter Using Port
     }
 }
