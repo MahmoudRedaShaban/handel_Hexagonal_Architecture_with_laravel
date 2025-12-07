@@ -4,7 +4,7 @@ namespace App\Domain\Customer\Entities;
 
 class Customer
 {
-    public function __construct(public string $name, public string $email)
+    public function __construct(public string $name, public string $email, public ?int $id=null)
     {
     }
 }
